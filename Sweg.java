@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
 import it.unimi.dsi.webgraph.ImmutableGraph;
-import org.apache.commons.math3.distribution.GammaDistribution;
 import org.javatuples.Pair;
 import java.io.FileWriter;
 import java.io.File;
