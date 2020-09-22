@@ -1,5 +1,3 @@
-//To Compile the Codes on my Machine: javac -cp "lib/*" -d bin src/*.java
-// To run it: java -cp "lib/*":"bin/" graph_sum.SuperNodes sets/uk-2007-05@100000-sym (Netowrk's name)
 package graph_sum;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -28,17 +26,13 @@ public class Sweg {
 	
 	int[] S; //supernodes array; e.g. S[3]==2 means node 3 is in supernode 2.
 	int[] I; //the first node array; 
-			//e.g. I[3]==5 means the first node in the supernode of node 3 is in index 5.
-			//e.g. I[4]==-1 means there is no supernode with id==4. 
+			 //e.g. I[3]==5 means the first node in the supernode of node 3 is in index 5.
+			 //e.g. I[4]==-1 means there is no supernode with id==4. 
 	int[] J; //the next node array; 
-			//e.g. J[3]==9 means the next node in the supernode of node 3 is in index 9.
-	
-			//Actually, the index of a node is the same as node id. 
-	
+			 //e.g. J[3]==9 means the next node in the supernode of node 3 is in index 9.	
 	int[] F; //shingle array; 
 			 //e.g. F[2]==8 means the shingle of supernode 2 is 8. 
-			//e.g. F[2]==-1 means there is no supernode 2. 
-	
+			 //e.g. F[2]==-1 means there is no supernode 2. 	
 	Integer[] G; //sorted group array; e.g. F[G[i]] <= F[G[i+1]] 
 	int gstart = 0;  //the index in G for which we have a real group (not -1)
 
@@ -57,8 +51,6 @@ public class Sweg {
 
     double error_bound;
     double[] cv;
-
-    //ArrayList<Integer> merge_group_sizes;
 	
 	public Sweg (String basename, double error_bound) throws Exception {
 		Gr = ImmutableGraph.loadMapped(basename);
@@ -68,7 +60,7 @@ public class Sweg {
 		I = new int[n];
         J = new int[n];	
 
-		for(int i=0; i<n; i++){
+		for (int i = 0; i < n; i++){
 			h[i] = i;			
 			S[i] = i;
 			I[i] = i;
@@ -90,66 +82,48 @@ public class Sweg {
 	}
 
 	void shuffleArray(){
-    // If running on Java 6 or older, use `new Random()` on RHS here
 	    Random rnd = new Random();
 	    rnd = ThreadLocalRandom.current();
-	    for (int i = h.length - 1; i > 0; i--)
-	    {
-	      int index = rnd.nextInt(i + 1);
-	      // Simple swap
-	      int a = h[index];
-	      h[index] = h[i];
-	      h[i] = a;
+	    for (int i = h.length - 1; i > 0; i--) {
+            int index = rnd.nextInt(i + 1);
+            int a = h[index];
+            h[index] = h[i];
+            h[i] = a;
 	    }
-  }
-	
-	/*Input: input graph G = (V, E), current supernodes S
-	  Output: disjoint groups of supernodes: {S(1), . . ., S(k) }
-	1: generate a random bijective hash function h : V to {1, . . ., |V| }
-	2: for each supernode A in S do
-	3: 		for each node v in A do
-	4: 			f(v)=min({h(u) : u in Nv or u = v })  //shingle of node v
-	5: 		F(A)=min({f(v) : v in A}) //shingle of supernode A
-	6: divide the supernodes in S into {S(1), . . ., S(k) } by their F(.) value
-	7: return {S(1), . . ., S(k) }
-	 */
-	
+    }	
 	
 	void Divide() {
 		//generate a random bijective hash function h : V to {1, . . ., |V| } 
-		// Collections.shuffle(Arrays.asList(h));
 		shuffleArray();
 		F = new int[n];
-		for(int A=0; A<n ; A++) 
+		for (int A = 0; A < n; A++) 
 			F[A] = -1;
 		
-		for(int A=0; A<n ; A++) {
-			if(I[A]==-1) //A is not supernode; skip
+		for (int A = 0; A < n; A++) {
+			if (I[A] == -1) //A is not supernode; skip
 				continue;
 			
 			F[A] = n; //one more than greatest possible value of n-1
-			for(int v=I[A]; ; v=J[v]) {
+			for (int v = I[A]; ; v=J[v]) {
 				int fv = f(v);
-				if(F[A] > fv)
+				if (F[A] > fv)
 					F[A] = fv;
 				
-				if(J[v]==-1)
+				if (J[v] == -1)
 					break;
 			}
 		}
 		
 		//sort groups
         G = new Integer[n];
-        for(int i = 0; i < n; i++) G[i] = i;
+        for (int i = 0; i < n; i++) G[i] = i;
         Arrays.sort(G, (o1,o2) -> Integer.compare(F[o1], F[o2]));
         
         //initialize gstart: the index in G for which we have a real group (not -1)
         gstart = 0;
-        while(F[G[gstart]] == -1)
+        while (F[G[gstart]] == -1)
         	gstart++;
-	}
-	
-	
+	}	
 	
 	//shingle of a node
 	int f(int v) {
@@ -157,385 +131,91 @@ public class Sweg {
 		// we initialize fv as the shingle value of node v. 
 		int v_deg = Gr.outdegree(v);
 		int[] v_succ = Gr.successorArray(v);
-		for(int j=0; j<v_deg; j++) {
+		for(int j = 0; j < v_deg; j++) {
 			int u = v_succ[j];
 			if(fv > h[u])
 				fv = h[u];
 		}
 		return fv;
 	}
-	//==============
-			/*
-			Input: input graph G = (V, E), current supernodes S,
-		current iteration t, disjoint groups of supernodes {S(1), ..., S(k)}
-		Output: updated supernodes S
-		1: for each group S^(i) ∈ {S(1), ..., S^(k)} do
-		2: Q <- S(i)
-		3: while | Q | > 1 do
-		4: pick and remove a random supernode A from Q
-		5: B <- arg maxC∈Q SuperJaccard(A, C) ▷ Eq. (4) SuperJaccard(A, B) =sum v ∈N_A ∪ N_B min(w(A,v),w(B,v)) / sum v ∈N_A ∪ N_B max(w(A,v),w(B,v)),
-		6: if Saving(A, B, S) ≥ θ (t) then ▷ Eq. (3) and Eq. (5)
-		7: S <- (S − {A, B }) ∪ {A ∪ B } ▷ merge A and B
-		8: S(i) <- (S(i) − {A, B }) ∪ {A ∪ B }
-		9: Q <- (Q − {B }) ∪ {A ∪ B } ▷ replace B with A ∪ B
-		10: return 
-			*/
-	void merge(int number_groups, int tt, int[][] group_prop){
-		//tt -> current iteration, it is useful for defining the threshoold
-		// group_prop: enables us to recover the supernodes inside group with O(1) time
-		//number_groups: number of groups that generated by the dividing step.
-		int merges_number = 0; int idx = 0; //Responsilbe for number of times merging between a pair of supernodes happen.
+
+
+	void merge(int number_groups, int tt, int[][] group_prop) {
+        int merges_number = 0; int idx = 0; // Responsible for number of times merging between a pair of supernodes happen.
 		int[] temp = new int[n]; // temp <- F[G]
-		double Threshold = 1/((tt + 1)*1.0);
-		int group_size = 0; double[] jac_sim;
-		for (int i = 0 ; i < n ; i++) temp[i] = F[G[i]];
-		//for (int i = 0; i<200;i++) System.out.print(temp[i] + " ");
+		double Threshold = 1 / ((tt + 1) * 1.0);
+        int group_size = 0; 
+        double[] jac_sim;
+		for (int i = 0; i < n; i++) temp[i] = F[G[i]];
 
 		int total_merge_successes = 0;
-		int total_merge_fails = 0;
+        int total_merge_fails = 0;
+        
 		// for each group of supernodes in the dividing step
-		for (int i = 0 ; i < number_groups ; i++){
+		for (int i = 0; i < number_groups; i++) {
 
 			int st_position = group_prop[i][1];
-			group_size = groups_length(temp,group_prop[i][0],st_position)-1;
-			if (group_size<2) continue;
-
-			// this is just for printing
-			/*if(i%100 == 1){
-				System.out.println("Key is: " + temp[group_prop[i][1]] + " Idx is: " + st_position + " Temp Value is: "  + group_prop[i][0] + " Number of Hits: " + group_size + " Currnet Super Group is: " + i);
-				System.out.println("Number of Merging Happens so far: " + merges_number);
-			}*/
+			group_size = groups_length(temp,group_prop[i][0], st_position) - 1;
+			if (group_size < 2) continue;
 			
 			// Q is the current group of supernodes that we're merging (from dividing step)
 			int[] Q = new int[group_size];
 			int counter = 0;
 			// create the group Q
-			for (int j= st_position ; j < (st_position + group_size) ; j++){
+			for (int j = st_position; j < (st_position + group_size); j++) {
 				Q[counter++] = G[j];
 			}
 
 			int merging_success = 0;
 			int merging_fails = 0;
-			HashMap<Integer, HashMap<Integer,Integer>> hm = create_W(Q,group_size);
+			HashMap<Integer, HashMap<Integer,Integer>> hm = create_W(Q, group_size);
 
 			int initial_size = hm.size();
-			while(hm.size()>1){
-					Random rand = new Random();
-					int A = rand.nextInt(initial_size);
-					if(hm.get(A) == null)
-						continue;
-					double max = 0;
-					idx = -1;
-					// boolean condition = false; 
-					for(int j = 0 ; j < initial_size ; j++){
-						if(hm.get(j) == null)
-							continue;
-						if (j==A) continue;
-						jac_sim = JacSim_SavCost(hm.get(A),hm.get(j));
-						if (jac_sim[0] > max)
-						{
-							// condition = true;
-							max = jac_sim[0];
-							idx = j;
-						}
-					}
-					
-					if (idx==-1){
-						// System.out.println("IDX = -1");
-						hm.remove(A);
-						continue;
-					}
-					double savings = costSaving(hm.get(A) , hm.get(idx) , Q[A] , Q[idx]);
-					if (savings >=Threshold){
-						HashMap<Integer,Integer> w_update = update_W(hm.get(A),hm.get(idx));
-						hm.replace(A, w_update);
-						hm.remove(idx);
-				 		Update_S(Q[A] , Q[idx]);
-				 		merging_success++;
-						merges_number++;
-					}
-					else
-					{
-						merging_fails++;
-						hm.remove(A);
-					}
+			while (hm.size() > 1) {
+                Random rand = new Random();
+                int A = rand.nextInt(initial_size);
+                if (hm.get(A) == null)
+                    continue;
+                double max = 0;
+                idx = -1;
+
+                for (int j = 0; j < initial_size; j++) {
+                    if(hm.get(j) == null)
+                        continue;
+                    if (j == A) continue;
+                    jac_sim = JacSim_SavCost(hm.get(A),hm.get(j));
+                    if (jac_sim[0] > max) {
+                        max = jac_sim[0];
+                        idx = j;
+                    }
+                }
+                
+                if (idx == -1){
+                    hm.remove(A);
+                    continue;
+                }
+                double savings = costSaving(hm.get(A), hm.get(idx), Q[A], Q[idx]);
+                if (savings >= Threshold){
+                    HashMap<Integer,Integer> w_update = update_W(hm.get(A),hm.get(idx));
+                    hm.replace(A, w_update);
+                    hm.remove(idx);
+                    Update_S(Q[A], Q[idx]);
+                    merging_success++;
+                    merges_number++;
+                } else {
+                    merging_fails++;
+                    hm.remove(A);
+                }
 			}
 
 			total_merge_successes += merging_success;
 			total_merge_fails += merging_fails;
 		}
-
-		//System.out.println();
-		//System.out.println("Merging Successes: " + total_merge_successes);
-		//System.out.println("Merging Fails:     " + total_merge_fails);
-
 	}
 
-	void merge_lsh(int number_groups, int tt, int[][] group_prop){
-        //merge_group_sizes = new ArrayList<Integer>();
-		//tt -> current iteration, it is useful for defining the threshoold
-		// group_prop: enables us to recover the supernodes inside group with O(1) time
-		//number_groups: number of groups that generated by the dividing step.
-		int merges_number = 0; int idx = 0; //Responsilbe for number of times merging between a pair of supernodes happen.
-        int[] temp = new int[n]; // temp <- F[G]
-		double Threshold = 1/((tt + 1)*1.0);
-		int group_size = 0; double[] jac_sim;
-		for (int i = 0 ; i < n ; i++) temp[i] = F[G[i]];
-		//for (int i = 0; i<200;i++) System.out.print(temp[i]+ " ");
-
-
-		int total_merge_successes = 0;
-		int total_merge_fails = 0;
-		// for each group of supernodes in the dividing step
-		for (int i = 0 ; i < number_groups ; i++){
-
-			int st_position = group_prop[i][1];
-            group_size = groups_length(temp,group_prop[i][0],st_position)-1;
-            //merge_group_sizes.add(group_size);
-			if (group_size<2) continue;
-			
-			// Q is the current group of supernodes that we're merging (from dividing step)
-			int[] Q = new int[group_size];
-			int counter = 0;
-			// create the group Q
-			for (int j= st_position ; j < (st_position + group_size) ; j++){
-				Q[counter++] = G[j];
-			}
-
-			int merging_success = 0;
-			int merging_fails = 0;
-			HashMap<Integer, HashMap<Integer,Integer>> hm = create_W(Q,group_size);
-
-
-			// We are only going to test where the size of subset is >= 100
-			//if (Q.length >= 100) {
-			//System.out.println(Q.length);
-
-			// Split Q into buckets by weighted jaccard sim
-			int[] Q_buckets_0 = new int[Q.length];
-			int[] Q_buckets_1 = new int[Q.length];
-
-			GammaDistribution gamma = new GammaDistribution(2, 1);
-			Random uniform = new Random();
-			//HashMap<Pair<Integer,Integer>, Integer> bucket_analysis = new HashMap<Pair<Integer,Integer>, Integer>();
-				
-			for (int x = 0; x < Q.length; x++) {
-				HashMap<Integer, Integer> hm_x = hm.get(x);
-				
-				int min_k = Integer.MAX_VALUE;
-				int min_tk = 0;
-
-				for(Integer Sk : hm_x.keySet()) {
-					double rk = gamma.sample();
-					double ck = gamma.sample();
-					double bk = uniform.nextDouble();
-
-					double tk = Math.floor( Math.log(hm_x.get(Sk)) / rk + bk );
-					//double yk = Math.exp(rk * (tk - bk));
-					//double ak = ck / (yk * Math.exp(rk));
-					double ln_yk = rk * (tk - bk);
-					double ln_ak = Math.log(ck) - ln_yk  - rk;
-
-					if ((int)ln_ak < min_k) {
-                        min_k = (int)ln_ak;
-                        //min_k = Sk;
-						min_tk = (int)tk;
-					}
-				}
-
-				Q_buckets_0[x] = min_k;
-				Q_buckets_1[x] = min_tk;
-				/*Pair<Integer, Integer> hash = new Pair<Integer, Integer>(min_k, min_tk);
-				
-				Integer freq = bucket_analysis.get(hash);
-				if (freq == null) {
-					bucket_analysis.put(hash, 1);
-				} else {
-					bucket_analysis.put(hash, freq + 1);
-				}*/
-
-			}
-			//System.out.println(bucket_analysis.values());
-
-			//} // if (100)
-
-			int initial_size = hm.size();
-			while(hm.size()>1){
-
-				Random rand = new Random();
-				int A = rand.nextInt(initial_size);
-
-				if(hm.get(A) == null) continue;
-
-                double max = 0;
-                idx = -1;
-				
-				for (int j = 0 ; j < initial_size ; j++) {
-
-					if (hm.get(j) == null) continue;
-					if (j==A) continue;
-					if (Q_buckets_0[A] != Q_buckets_0[j] || Q_buckets_1[A] != Q_buckets_1[j]) continue;
-
-					jac_sim = JacSim_SavCost(hm.get(A),hm.get(j));
-                    if (jac_sim[0] > max)
-                    {
-                        // condition = true;
-                        max = jac_sim[0];
-                        idx = j;
-                    }
-				}
-
-				if (idx==-1){
-                    // System.out.println("IDX = -1");
-                    hm.remove(A);
-                    continue;
-                }
-                double savings = costSaving(hm.get(A) , hm.get(idx) , Q[A] , Q[idx]);
-                if (savings >=Threshold){
-                    HashMap<Integer,Integer> w_update = update_W(hm.get(A),hm.get(idx));
-                    hm.replace(A, w_update);
-                    hm.remove(idx);
-                     Update_S(Q[A] , Q[idx]);
-                     merging_success++;
-                    merges_number++;
-                }
-                else
-                {
-                    merging_fails++;
-                    hm.remove(A);
-                }
-
-			} // while
-			
-			total_merge_successes += merging_success;
-			total_merge_fails += merging_fails;
-
-		} // for supernode groups from dividing step
-
-		//System.out.println("Merging Successes: " + total_merge_successes);
-        //System.out.println("Merging Fails:     " + total_merge_fails);
-        //System.out.println();
-
-        /* Collections.sort(merge_group_sizes, Collections.reverseOrder());
-        for (int i = 0; i < 30; i++) {
-            System.out.print(merge_group_sizes.get(i) + ", ");
-        }
-        System.out.println(); */
-
-    } // merge lsh
-
-    void encode_lsh() {
-        System.out.println("Encoding LSH...");
-        int edges_compressed = 0;
-        int supernode_count = 0;
-        int[] S_copy = Arrays.copyOf(S, S.length);
-
-        for (int i = 0; i < n; i++) {
-            // if i is a supernode
-            if (I[i] != -1) {
-                int[] nodes_inside = Recover_S(i);
-                TIntArrayList nodes_inside_list = new TIntArrayList();
-                supernode_sizes[supernode_count] = nodes_inside.length;
-
-                for (int j = 0; j < nodes_inside.length; j++) {
-                    nodes_inside_list.add(nodes_inside[j]);
-                    S_copy[nodes_inside[j]] = supernode_count;                
-                }
-
-                sn_to_n.put(supernode_count, nodes_inside_list);
-                supernode_count++;
-            }
-        }
-
-        //ArrayList<String> edges_encoding = new ArrayList<String>();
-        //ArrayList<FourTuple> edges_encoding = new ArrayList<FourTuple>();
-        LinkedList<FourTuple> edges_encoding = new LinkedList<FourTuple>();
-
-        for (int node = 0; node < n; node++) {
-            for(int neighbour : Gr.successorArray(node)) {
-                //if (neighbour >= node) {
-                if (S_copy[node] <= S_copy[neighbour]) {
-                    edges_encoding.add(new FourTuple(S_copy[node], S_copy[neighbour], node, neighbour));
-                }
-            }
-        }
-        
-        Collections.sort(edges_encoding);        
-
-        //int prev_A = (int)Integer.parseInt(edges_encoding.get(0).split(" ")[0]);
-        //int prev_B = (int)Integer.parseInt(edges_encoding.get(0).split(" ")[1]);    
-        int prev_A = edges_encoding.get(0).A;
-        int prev_B = edges_encoding.get(0).B;
-        HashSet<Pair<Integer, Integer>> edges_set = new HashSet<Pair<Integer, Integer>>();
-
-        Iterator<FourTuple> iter = edges_encoding.iterator();
-        //for (FourTuple e_encoding : edges_encoding) {
-        while (!edges_encoding.isEmpty()) {
-            //String[] encoding_array = e_encoding.split(" ");
-            //int A = (int)Integer.parseInt(encoding_array[0]);
-            //int B = (int)Integer.parseInt(encoding_array[1]);   
-            FourTuple e_encoding = edges_encoding.pop();  
-            int A = e_encoding.A;
-            int B = e_encoding.B;       
-            
-            if ((A != prev_A || B != prev_B)) { // we've moved onto a different pair of supernodes A and B
-
-                if (prev_A <= prev_B) { // && prev_A != prev_B
-                    double edges_compare_cond = 0;
-                    if (prev_A == prev_B) { edges_compare_cond = supernode_sizes[prev_A] * (supernode_sizes[prev_A] - 1) / 4; }
-                    else                  { edges_compare_cond = (supernode_sizes[prev_A] * supernode_sizes[prev_B]) / 2;     }
-
-                    if (edges_set.size() <= edges_compare_cond) {
-                        if (prev_A != prev_B) edges_compressed += edges_set.size();
-                        for (Pair<Integer, Integer> edge : edges_set) {
-                            Cp_0.add(edge.getValue0());
-                            Cp_1.add(edge.getValue1());
-                        }                     
-                    } else {
-                        if (prev_A != prev_B) edges_compressed += supernode_sizes[prev_A] * supernode_sizes[prev_B] - edges_set.size() + 1;
-
-                        P.add(new Pair(prev_A, prev_B));
-                        
-                        TIntArrayList in_A = sn_to_n.get(prev_A);
-                        TIntArrayList in_B = sn_to_n.get(prev_B);
-                        for (int a = 0; a < in_A.size(); a++) {
-                            for (int b = 0; b < in_B.size(); b++) {
-                                Pair<Integer, Integer> edge = new Pair(in_A.get(a), in_B.get(b));
-
-                                if (!(edges_set.contains(edge))) {
-                                    Cm_0.add(in_A.get(a));
-                                    Cm_1.add(in_B.get(b));
-                                }
-                            } // for b
-                        } // for a                         
-                    } // else
-                } // if
-                
-                edges_set = new HashSet<Pair<Integer, Integer>>();
-            } // if            
-
-            //edges_set.add(new Pair(Integer.parseInt(encoding_array[2]), Integer.parseInt(encoding_array[3])));
-            edges_set.add(new Pair(e_encoding.u, e_encoding.v));
-            prev_A = A;
-            prev_B = B;
-        } // for edges encoding
-
-        //System.out.println("No self edges: " + (1 - (edges_compressed * 1.0) / (Gr.numArcs() / 2 * 1.0)));
-
-        System.out.print("P: " + P.size() + " edges | ");
-        System.out.print("Cp: " + Cp_0.size() + " edges | ");
-        System.out.print("Cm: " + Cm_0.size() + " edges | ");
-        System.out.println("Orig Edges: " + Gr.numArcs() + " edges");
-        //System.out.println("With self edges: " + (1 - (P.size() + Cp_0.size() + Cm_0.size() * 1.0)/(Gr.numArcs()/2 * 1.0)));
-
-        System.out.println("No Drop Compression (No self edges): " + (1 - (edges_compressed * 1.0) / (Gr.numArcs() / 2 * 1.0)));
-       
-    }
     
     void encode_old() {
-        //System.out.println("----------------------------------- ENCODE ----------------------------------------");
-        System.out.println("Encoding NOT LSH...");        
-
+        System.out.println("Encoding...");
         int supernode_count = 0;
         int[] S_copy = Arrays.copyOf(S, S.length);
 
@@ -555,8 +235,6 @@ public class Sweg {
                 supernode_count++;
             }
         }
-
-        System.out.println("Supernodes: " + supernode_count);
 
         for (int A = 0; A < supernode_count; A++) {
             TIntArrayList in_A = sn_to_n.get(A);
@@ -583,7 +261,6 @@ public class Sweg {
                 } // for i
             } // for A
 
-            //for (int B = A; B < supernode_count; B++) {
             TIntIterator iter = has_edge_with_A.iterator();            
             while (iter.hasNext()) {
                 int B = (Integer)iter.next();
@@ -595,7 +272,6 @@ public class Sweg {
                 if (edges_count[B] <= edge_compare_cond) {
                     // Add edges between A and B to C+
                     for (Pair<Integer, Integer> edge : ((HashSet<Pair<Integer, Integer>>)edges_list[B])) {
-                        //Cp.add(edge);
                         Cp_0.add(edge.getValue0());
                         Cp_1.add(edge.getValue1());
                     }
@@ -610,7 +286,6 @@ public class Sweg {
                             Pair<Integer, Integer> edge = new Pair(in_A.get(a), in_B.get(b));
 
                             if (!((HashSet<Pair<Integer, Integer>>)edges_list[B]).contains(edge)) {
-                                //Cm.add(new Pair(in_A.get(a), in_B.get(b)));
                                 Cm_0.add(in_A.get(a));
                                 Cm_1.add(in_B.get(b));
                             }
@@ -632,20 +307,15 @@ public class Sweg {
 
 
     void drop() {
-        //System.out.println("----------------------------------- DROP ----------------------------------------");
         System.out.println("Dropping...");
 
         for (int i = 0; i < n; i++) {
             cv[i] = error_bound * Gr.outdegree(i);
         }
 
-        //ArrayList<Pair<Integer, Integer>> updated_Cp = new ArrayList<Pair<Integer, Integer>>();
         TIntArrayList updated_Cp_0 = new TIntArrayList();
         TIntArrayList updated_Cp_1 = new TIntArrayList();        
-        //for (Pair<Integer, Integer> edge : Cp) {
         for (int i = 0; i < Cp_0.size(); i++) {
-            //int edge_u = edge.getValue0();
-            //int edge_v = edge.getValue1();
             int edge_u = Cp_0.get(i);
             int edge_v = Cp_1.get(i);
 
@@ -653,23 +323,16 @@ public class Sweg {
                 cv[edge_u] = cv[edge_u] - 1;
                 cv[edge_v] = cv[edge_v] - 1;
             } else {
-                //updated_Cp.add(edge);
                 updated_Cp_0.add(edge_u);
                 updated_Cp_1.add(edge_v);
             }
-            /* Cp_0.removeAt(i);
-            Cp_1.removeAt(i); */
         }
         Cp_0 = updated_Cp_0;
         Cp_1 = updated_Cp_1;
         
-        //ArrayList<Pair<Integer, Integer>> updated_Cm = new ArrayList<Pair<Integer, Integer>>();
         TIntArrayList updated_Cm_0 = new TIntArrayList();
         TIntArrayList updated_Cm_1 = new TIntArrayList();   
-        //for (Pair<Integer, Integer> edge : Cm) {
         for (int i = 0; i < Cm_0.size(); i++) {
-            //int edge_u = edge.getValue0();
-            //int edge_v = edge.getValue1();
             int edge_u = Cm_0.get(i);
             int edge_v = Cm_1.get(i);
 
@@ -677,12 +340,9 @@ public class Sweg {
                 cv[edge_u] = cv[edge_u] - 1;
                 cv[edge_v] = cv[edge_v] - 1;
             } else {
-                //updated_Cm.add(edge);
                 updated_Cm_0.add(edge_u);
                 updated_Cm_1.add(edge_v);
             }
-            /* Cm_0.removeAt(i);
-            Cm_1.removeAt(i); */
         }
         Cm_0 = updated_Cm_0;
         Cm_1 = updated_Cm_1;
@@ -738,10 +398,6 @@ public class Sweg {
             
         } 
         P = updated_P;   
-        /* System.out.print("P: " + P.size() + " edges | ");
-        System.out.print("Cp: " + Cp_0.size() + " edges | ");
-        System.out.print("Cm: " + Cm_0.size() + " edges | ");
-        System.out.println("Orig Edges: " + Gr.numArcs() + " edges"); */
         System.out.println("Drop Compression: " + (1 - (P.size() + Cp_0.size() + Cm_0.size() * 1.0)/(Gr.numArcs()/2 * 1.0)));
     }
 
@@ -791,17 +447,13 @@ public class Sweg {
             fileWriterP.close();
 
             FileWriter fileWriterCp = new FileWriter("compressed/Cp.txt");
-            //for (Pair<Integer, Integer> edge : Cp) {
             for (int i = 0; i < Cp_0.size(); i++) {
-                //fileWriterCp.write(edge.getValue0() + "\t" + edge.getValue1() + "\n");
                 fileWriterCp.write(Cp_0.get(i) + "\t" + Cp_1.get(i) + "\n");
             }
             fileWriterCp.close();
 
             FileWriter fileWriterCm = new FileWriter("compressed/Cm.txt");
-            //for (Pair<Integer, Integer> edge : Cm) {
             for (int i = 0; i < Cm_0.size(); i++) {
-                //fileWriterCm.write(edge.getValue0() + "\t" + edge.getValue1() + "\n");
                 fileWriterCm.write(Cm_0.get(i) + "\t" + Cm_1.get(i) + "\n");
             }
             fileWriterCm.close();
@@ -952,10 +604,11 @@ public class Sweg {
 			result.put(key, w_B.get(key));
 		}
 		return result;
-	}
+    }
+    
 	//==================== Jaccard Similarity (Eq.4) and Savings Eq 3 and Eq. 5
 	// Updated version of Jaccard Sim with using just pair of W's
-//====================================================================
+    //====================================================================
 	double[] JacSim_SavCost(HashMap<Integer, Integer> w_A , HashMap<Integer,Integer> w_B){
 		int  down =0; int up = 0; int savings_up = 0; int savings_down = 0;
 		savings_down = w_A.size() + w_B.size();
@@ -986,15 +639,14 @@ public class Sweg {
     	res[0] = (up*1.0)/(down*1.0);
 		res[1] = 1 - (savings_up * 1.0)/(savings_down * 1.0) ;
 		return res;
-	}
-//=============== Realize the number of duplicate value (key) from the start postion (st_pos) in arr
+    }    
+    //=============== Realize the number of duplicate value (key) from the start postion (st_pos) in arr
 	int groups_length(int[] arr,int key , int st_pos){
 		int count = 1;
 		while(arr[st_pos++]==key && st_pos<arr.length - 1) count++;
 		return count;
 	}
-
-//====================== Finds the nodes in each supernode with index key
+    //====================== Finds the nodes in each supernode with index key
 	int[] Recover_S(int key){
 		//Extracting the nodes belong to supernode key and return it (Arr)
 		int length1 = supernode_length(key);
@@ -1026,50 +678,40 @@ public class Sweg {
 		for (int i = 0 ; i < A_Nodes.length ; i++) S[A_Nodes[i]] = I[A];
 			for (int i = 0 ; i < B_Nodes.length ; i++) S[B_Nodes[i]] = I[A];
 	}
-	//========================================================== Alex's codes
+
 	void test(int Iter) {
-        if (use_lsh_merge == 1) {
-            System.out.println("----------------------------------- LSH MERGE ----------------------------------------");
-        } else {
-            System.out.println("----------------------------------- NOT LSH MERGE ----------------------------------------");
-        }
+        System.out.println("----------------------------------- SWeG MERGE ----------------------------------------")
 
         long divideStartTime = System.currentTimeMillis();
         long encodeStartTime = 0;
         long dropStartTime = 0;
 
-		for (int iter = 1 ; iter <=Iter ; iter++){
+		for (int iter = 1; iter <= Iter; iter++){
             System.out.print(iter + " ");
 			Divide();
-			//System.out.println("gstart = " + gstart);
 			int cnt_groups = 0;
 			int g = -1; //current group
-			for(int i=gstart; i<n; i++) {
-				//System.out.println(F[G[i]]);
-				if(F[G[i]] != g) {
+			for (int i = gstart; i < n; i++) {
+				if (F[G[i]] != g) {
 					cnt_groups++;
 					g = F[G[i]];
 				}
 			}
             int[][] group_prop = new int[cnt_groups][2]; // when F[G[i]]>F[G[i-1]] -> Another new group. 
-			//In this case: F[G[i]]: id of the new detected group  -> group_prop[counter][0] <- F[G[i]]
+			// In this case: F[G[i]]: id of the new detected group  -> group_prop[counter][0] <- F[G[i]]
 			// The first hit of the group in F[G[]]  is i -> group_prop[counter][1] <- i
 			g = -1;
 			int counter = 0;
-			for(int i=gstart; i<n; i++) {
-				if(F[G[i]] != g) {
+			for (int i = gstart; i < n; i++) {
+				if (F[G[i]] != g) {
 					group_prop[counter][0] = F[G[i]];
 					group_prop[counter][1] = i;
 					counter++;
-					// cnt_groups++;
 					g = F[G[i]];
 				}
 			}
 
-			//System.out.println("cnt_groups = " + cnt_groups);
-
-			if (use_lsh_merge == 1) { merge_lsh(cnt_groups, iter, group_prop); }
-            else 			   		{ merge(cnt_groups, iter, group_prop); }
+			merge(cnt_groups, iter, group_prop); 
             
             if (iter % print_iteration_offset == 0 && iter != Iter) {
                 System.out.println("\n------------------------- ITERATION " + iter);
@@ -1083,8 +725,7 @@ public class Sweg {
                 Cm_0 = new TIntArrayList(); Cm_1 = new TIntArrayList();
 
                 encodeStartTime = System.currentTimeMillis();
-                if (use_lsh_merge == 1) { encode_lsh(); }
-                else 			   		{ encode_old(); }   
+                encode_old(); 
                 encodeTime = (System.currentTimeMillis() - encodeStartTime) / 1000.0;
                 System.out.println("Encode Time: " + encodeTime + " seconds");
 
@@ -1111,8 +752,7 @@ public class Sweg {
         Cm_0 = new TIntArrayList(); Cm_1 = new TIntArrayList();
 
         encodeStartTime = System.currentTimeMillis();
-        if (use_lsh_merge == 1) { encode_lsh(); }
-        else 			   		{ encode_old(); }        
+        encode_old();        
         encodeTime = (System.currentTimeMillis() - encodeStartTime) / 1000.0;
         System.out.println("Encode Time: " + encodeTime + " seconds");
 
@@ -1126,47 +766,9 @@ public class Sweg {
 	}
 
 	void evaluateCompression() {
-		/*int[] sp_size = new int[n];	// sp_size[i] --> Size of each supernode
-		int sp_num = 0; // total number of supernodes, we can find out the number by considering Vector I
-		// Finding the size of SyperEdges and Corrections
-		HashMap<Integer,ArrayList<Integer>> sp_all = new HashMap<Integer,ArrayList<Integer>>(); // Each key is the id of supernode and i
-		//Its values are the single nodes inside that supernode
-		for (int i = 0 ; i < n ; i++){ 
-			if (I[i]!=-1){
-				int[] s = Recover_S(i); // Nodes in that supernode
-				sp_size[sp_num] = s.length;
-				ArrayList<Integer> sp = new ArrayList<Integer>();
-				for (int j = 0 ; j < s.length ; j++){
-					S[s[j]] = sp_num; // S is the membership vector for each node toward each supernode 
-					//S[7] = 3 -- >  Nodes 7 is in the supernode 3.
-					sp.add(s[j]);
-				}
-				sp_all.put(sp_num,sp);
-				sp_num++;	 
-			}
-		}
-		int result = 0;
-		for (int i = 0 ; i < sp_num ; i++){
-			// int source_size = sp_size[i];
-			int[] neighbor_size = new int[sp_num]; // Find how many neighbors supernodes i does have with each other supernodes.
-			ArrayList<Integer> current_sp = sp_all.get(i);
-			for (int j = 0 ; j < sp_size[i] ; j++){
-				int[] neighbors = Gr.successorArray(current_sp.get(j));
-				for (int k = 0 ; k < neighbors.length ; k++)
-					neighbor_size[S[neighbors[k]]]++;
-			}
-			for (int j = i ; j < sp_num ; j++){
-                if (i == j) continue;
-                int answer = sp_size[j] * sp_size[i] >= 2 * neighbor_size[j] ? neighbor_size[j] : sp_size[j] * sp_size[i] - neighbor_size[j] + 1;
-                result = result + answer;
-			}
-        } 
-		System.out.println("Number of Supernodes: " + sp_num + " Number of set sizes: " + result);
-        System.out.println("The total Compression is: " + (1.0 - (result * 1.0)/(Gr.numArcs() / 2 * 1.0)));*/
-
         int sp_num = 0;
         for (int i = 0; i < n; i++) {
-            if(I[i] != -1) { sp_num++; }
+            if (I[i] != -1) { sp_num++; }
         }
         System.out.println("Number of Supernodes: " + sp_num);
         System.out.println("Number of Edges Compressed: " + (P.size() + Cp_0.size() + Cm_0.size()));
@@ -1178,25 +780,14 @@ public class Sweg {
 	}
 
 	public static void main(String[] args) throws Exception {
-        //int iteration = 5;
         int iteration = Integer.parseInt(args[2]);
         double error_bound = 0.20;
-		// String basename = "cnr-2000"; 
-		// String basename = "dblp"
 		String basename = args[0];
-				//"ljournal-2008"; 
 		long startTime = System.currentTimeMillis();
 		Sweg t = new Sweg(basename, error_bound);
-        t.use_lsh_merge = Integer.parseInt(args[1]);
+        t.use_lsh_merge = Integer.parseInt(args[1]); // This variable is unused 
         t.print_iteration_offset = Integer.parseInt(args[3]);
         t.test(iteration);
-
-        /* System.out.println();
-        System.out.println("----------------------------------- TIMING ----------------------------------------");
-        System.out.println("Total time elapsed = " + (System.currentTimeMillis() - startTime) / 1000.0 + " seconds");
-        System.out.println("Divide and Merge Time = " + t.divideAndMergeTime + " seconds");
-        System.out.println("Encode Time = " + t.encodeTime + " seconds");
-        System.out.println("Drop Time = " + t.dropTime + " seconds"); */
 
         System.out.println();
         System.out.println("----------------------------------- EVALUATION ----------------------------------------");
