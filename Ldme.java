@@ -1,5 +1,3 @@
-//To Compile the Codes on my Machine: javac -cp "lib/*" -d bin src/*.java
-// To run it: java -cp "lib/*":"bin/" graph_sum.SuperNodes sets/uk-2007-05@100000-sym (Netowrk's name)
 package graph_sum;
 import java.util.Arrays;
 import java.util.ArrayList;
