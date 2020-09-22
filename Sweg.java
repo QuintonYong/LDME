@@ -679,7 +679,7 @@ public class Sweg {
 	}
 
 	void test(int Iter) {
-        System.out.println("----------------------------------- SWeG MERGE ----------------------------------------")
+        System.out.println("----------------------------------- SWeG MERGE ----------------------------------------");
 
         long divideStartTime = System.currentTimeMillis();
         long encodeStartTime = 0;

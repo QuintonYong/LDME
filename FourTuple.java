@@ -1,3 +1,5 @@
+package graph_sum;
+
 public class FourTuple implements Comparable<FourTuple> {
     int A, B, u, v;
 

@@ -1,3 +1,5 @@
+package graph_sum;
+
 public class OnePermHashSig {
     int sigSize;
     int[] sig;
