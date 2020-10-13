@@ -139,7 +139,7 @@ public class Ldme {
         Random random = new Random();
         for (int i = 0; i < k_bins; i++) {
             if (random.nextBoolean()) { rot_direction[i] = 1; }
-            else { rot_direction[i] = 1; }
+            else { rot_direction[i] = 0; }
         }
 
         shuffleArray();
