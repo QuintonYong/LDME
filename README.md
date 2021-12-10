@@ -23,7 +23,7 @@ javac -cp "lib/*" -d bin *.java
 
 5. Run Sweg.class with the following input parameters:
 
-java -cp "lib/*":"bin/" graph_sum.Sweg input_graph number_of_iteration print_iteration_offset dropping_ratio
+java -cp "lib/*":"bin/" graph_sum.Sweg [input_graph] [number_of_iteration] [print_iteration_offset] [dropping_ratio]
 
 
 
@@ -35,8 +35,13 @@ The state-of-the-art (lossless) correction-set basedgraph summarization. You can
 ## How to run it?
 1. Navigate to the directory Java files exist.
 2. Create a new directory named "bin" (mkdir bin)
+3. Compile all files in the following way: (the required jar files are in the lib directory)
 
-java -cp “lib/*”:”bin/“ graph_sum.Ldme [inpu_ graph] [num_of_iterations] [print_iteration_offsets] [size_of_hash]
+javac -cp "lib/*" -d bin *.java
+
+5. Run Ldme.class with the following input parameters:
+
+java -cp “lib/*”:”bin/“ graph_sum.Ldme [input_graph] [num_of_iterations] [print_iteration_offsets] [size_of_hash]
 
 # Remarks 
 All the input graphs should be in the [webgraph](https://www.ics.uci.edu/~djp3/classes/2008_01_01_INF141/Materials/p595-boldi.pdf) format because of its wonderful performance in compressing graphs. The datasets in this format can be found in: <http://law.di.unimi.it/datasets.php>
