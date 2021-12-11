@@ -16,12 +16,11 @@ There are two implementations in this repository
 SWeG is one of the state-of-the-art algorithms based on correction-set framework. You can download the paper from [here](https://dl.acm.org/doi/10.1145/3308558.3313402)
 ## How to run it? 
 1. Navigate to the directory Java files exist.
-2. Create a new directory named "bin" (mkdir bin)
-3. Compile all files in the following way: (the required jar files are in the lib directory)
+2. Compile all files in the following way: (the required jar files are in the lib directory)
 
 javac -cp "lib/*" -d bin *.java
 
-5. Run Sweg.class with the following input parameters:
+3. Run Sweg.class with the following input parameters:
 
 java -cp "lib/*":"bin/" graph_sum.Sweg [input_graph] [number_of_iteration] [print_iteration_offset] [dropping_ratio]
 
@@ -34,12 +33,11 @@ java -cp "lib/*":"bin/" graph_sum.Sweg [input_graph] [number_of_iteration] [prin
 The state-of-the-art (lossless) correction-set basedgraph summarization. You can read the paper [here](https://dl.acm.org/doi/pdf/10.1145/3448016.3457331) for more information. 
 ## How to run it?
 1. Navigate to the directory Java files exist.
-2. Create a new directory named "bin" (mkdir bin)
-3. Compile all files in the following way: (the required jar files are in the lib directory)
+2. Compile all files in the following way: (the required jar files are in the lib directory)
 
 javac -cp "lib/*" -d bin *.java
 
-5. Run Ldme.class with the following input parameters:
+3. Run Ldme.class with the following input parameters:
 
 java -cp “lib/*”:”bin/“ graph_sum.Ldme [input_graph] [num_of_iterations] [print_iteration_offsets] [size_of_hash]
 
@@ -97,29 +95,3 @@ __java -cp "lib/*" it.unimi.dsi.webgraph.BVGraph -o -O -L cnr-2000-t__
 Symmetrize by taking union:
 
 __java -cp "lib/*" it.unimi.dsi.webgraph.Transform union cnr-2000 cnr-2000-t cnr-2000-sym__
-
-
-### *Converting Edgelist Format to WebGraph Format*
-
-
-To convert the edgelist (TAB separated) file to WebGraph format you should execute the following steps:
-
-Sort the file, then remove any duplicate edges:
-
-```
-sort -nk 1 edgelistfile | uniq > edgelistsortedfile
-```
-
-(If you are on Windows, download *sort.exe* and *uniq.exe* from <http://gnuwin32.sourceforge.net/packages/coreutils.htm>)
-
-Run:
-
-```
-java -cp "lib/*" it.unimi.dsi.webgraph.BVGraph -g ArcListASCIIGraph edgelistsortedfile  dummy Basename
-```
-
-For example:
-
-```
-java -cp "lib/*" it.unimi.dsi.webgraph.BVGraph -g ArcListASCIIGraph cnr-2000.txt  cnr-2000
-```
