@@ -37,7 +37,6 @@ public class Ldme {
 	Integer[] G; //sorted group array; e.g. F[G[i]] <= F[G[i+1]] 
 	int gstart = 0;  //the index in G for which we have a real group (not -1)
 
-    int use_lsh_merge = 0; // gloabl variable to indicate if using lsh merge step
     int print_iteration_offset = 0; // run encode step after how many iterations
 
     int[] supernode_sizes;
@@ -861,14 +860,13 @@ public class Ldme {
 	}
 
 	public static void main(String[] args) throws Exception {
-        int iteration = Integer.parseInt(args[2]);
-        double error_bound = 0.20;
+        int iteration = Integer.parseInt(args[1]);
+        double error_bound = 0;
 		String basename = args[0];
 		long startTime = System.currentTimeMillis();
 		Ldme t = new Ldme(basename, error_bound);
-        t.use_lsh_merge = Integer.parseInt(args[1]); // this variable is unused
-        t.print_iteration_offset = Integer.parseInt(args[3]);
-        t.signatureLength = Integer.parseInt(args[4]);
+        t.print_iteration_offset = Integer.parseInt(args[2]);
+        t.signatureLength = Integer.parseInt(args[3]);
         t.test(iteration);
 
         System.out.println();
