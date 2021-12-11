@@ -20,7 +20,7 @@ SWeG is one of the state-of-the-art algorithms based on correction-set framework
 
 javac -cp "lib/*" -d bin *.java
 
-3. Run Sweg.class with the following input parameters:
+3. Run Sweg.class with the following input parameters (replace : with ; if on Windows instead of Linux):
 
 java -cp "lib/*":"bin/" graph_sum.Sweg [input_graph] [number_of_iteration] [print_iteration_offset] [dropping_ratio]
 
@@ -37,7 +37,7 @@ The state-of-the-art (lossless) correction-set basedgraph summarization. You can
 
 javac -cp "lib/*" -d bin *.java
 
-3. Run Ldme.class with the following input parameters:
+3. Run Ldme.class with the following input parameters (replace : with ; if on Windows instead of Linux):
 
 java -cp “lib/*”:”bin/“ graph_sum.Ldme [input_graph] [num_of_iterations] [print_iteration_offsets] [size_of_hash]
 
